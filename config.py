@@ -8,4 +8,3 @@ BANDS = 7
 
 # Sample Rate
 SAMPLE_RATE = 44100
-

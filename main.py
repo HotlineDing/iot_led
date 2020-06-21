@@ -2,8 +2,11 @@ import numpy as np
 import os
 import time
 import config
-import audio_processing
+from audio_processing import start_stream
 
+
+
+'''
 pid = os.fork()
 if pid:
     audio_processing.start_stream(print)
@@ -13,3 +16,4 @@ else:
     audio_processing.stream_flag = False
     print(audio_processing.stream_flag)
     print("DONE")
+'''

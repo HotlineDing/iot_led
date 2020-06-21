@@ -24,3 +24,6 @@ def start_stream(callback):
         audio_data = audio_data.astype(np.float32)
 
 
+def process_samples(samples):
+    norm_samples = samples / 2.0**15
+

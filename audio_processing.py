@@ -1,15 +1,36 @@
 import numpy as np
 import sys
+from scipy import signal
 import pyaudio
 import config
 import matplotlib.pyplot as plt
 
 my_pyaudio = pyaudio.PyAudio()
 
+INTERVAL = 0.32
+
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
+CHUNK = int( RATE * INTERVAL )
+
+stream = my_pyaudio.open(format=FORMAT, 
+                         channels=CHANNELS, 
+                         rate=RATE, 
+                         input=True, 
+                         output=True, 
+                         frames_per_buffer=CHUNK)
+
+data = stream.read(CHUNK, exception_on_overflow=False)
+data = np.frombuffer(data, dtype='b')
+f, t, Sxx = signal.spectrogram(data, fs=CHUNK)
+dBS = 10 * np.log10(Sxx)
+print(data.shape)
+
+'''
 def start_stream(callback):
     global stream_flag
-
-    pyaud = pyaudio.PyAudio()
+pyaud = pyaudio.PyAudio()
     samples_per_frame = int(config.SAMPLE_RATE / config.FPS)
 
     stream = pyaud.open(channels=1,
@@ -59,6 +80,7 @@ def spectrogram(samples, sample_rate, stride_ms=10.0,
 
 
 start_stream(print)
+'''
 
 
 

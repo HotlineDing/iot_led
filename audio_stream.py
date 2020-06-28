@@ -30,4 +30,5 @@ class Audio_Stream:
 
     
     def non_blocking_stream_read(self, in_data, frame_count, time_info, status_flags):
-        self.data_buffer.append_data(
+        
+        

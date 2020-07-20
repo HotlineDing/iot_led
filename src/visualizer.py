@@ -19,12 +19,13 @@ class Spectrum_Visualizer:
         self.HEIGHT = round(self.HEIGHT)
         self.WIDTH  = round(window_ratio*self.HEIGHT)
         self.y_ext = [round(0.05*self.HEIGHT), self.HEIGHT]
-        self.cm = cm.plasma
+        #self.cm = cm.plasma
         #self.cm = cm.inferno
+        self.cm = cm.hsv
 
         self.toggle_history_mode()
 
-        self.add_slow_bars = 1
+        self.add_slow_bars = 0
         self.add_fast_bars = 1
         self.slow_bar_thickness = max(0.00002*self.HEIGHT, 1.25 / self.ear.n_frequency_bins)
         self.tag_every_n_bins = max(1,round(5 * (self.ear.n_frequency_bins / 51))) # Occasionally display Hz tags on the x-axis
@@ -34,7 +35,9 @@ class Spectrum_Visualizer:
         self.fast_bar_colors = self.fast_bar_colors[::-1]
         self.slow_bar_colors = self.slow_bar_colors[::-1]
 
-        self.slow_features = [0]*self.ear.n_frequency_bins
+        self.fast_bar_colors = self.fast_bar_colors[2:] + self.fast_bar_colors[:2]
+
+        self.slow_features = [0]*self.ear.n_frequency_bins 
         self.frequency_bin_max_energies  = np.zeros(self.ear.n_frequency_bins)
         self.frequency_bin_energies = self.ear.frequency_bin_energies
         self.bin_text_tags, self.bin_rectangles = [], []
@@ -211,7 +214,7 @@ class Spectrum_Visualizer:
             for i, fast_bar in enumerate(self.fast_bars):
                 pygame.draw.rect(self.screen,self.fast_bar_colors[i],fast_bar,0)
 
-        if self.plot_audio_history:
+        if self.plot_audio_history: 
                 self.prev_screen = self.screen.copy()
                 self.prev_screen = pygame.transform.rotate(self.prev_screen, 180)
                 self.prev_screen.set_alpha(self.prev_screen.get_alpha()*self.alpha_multiplier)

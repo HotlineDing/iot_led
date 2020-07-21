@@ -1,4 +1,4 @@
-t import numpy as np
+import numpy as np
 import time, sys, math
 import pygame
 from collections import deque

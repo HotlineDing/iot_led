@@ -65,3 +65,4 @@ class Array(Device):
         rgb_leds = bytes(rgb_leds)
         return rgb_leds
 
+

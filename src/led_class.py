@@ -66,3 +66,22 @@ class Array(Device):
         return rgb_leds
 
 
+shape= [[12, 3],
+        [14, 2],
+        [20, 5],
+        [34, 1],
+        [15, 4]]
+class Cloud(Device):
+    def __init__(self, ear, device_type, ip, port, shape):
+        super().__init__(ear, device_type, ip, port)
+        self.segments = shape
+        self.total_leds = sum([x[0] for x in self.segments])
+        self.colors = [list((255*np.array(self.cm(i))[:3]).astype(int)) for i in np.linspace(0,255,self.total_leds).astype(int)]
+        self.bins_per_segment = ear.visualizer.n_frequency_bins // len(self.segments)
+
+
+    def generate_pixels(self):
+        pixels = []
+
+        
+        return None

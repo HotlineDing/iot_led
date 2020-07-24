@@ -55,20 +55,22 @@ class Stream_Analyzer:
         #Custom settings:
         self.rolling_stats_window_s    = 20     # The axis range of the FFT features will adapt dynamically using a window of N seconds
         self.equalizer_strength        = 0.20   # [0-1] --> gradually rescales all FFT features to have the same mean
-        self.apply_frequency_smoothing = True   # Apply a postprocessing smoothing filter over the FFT outputs
+        self.apply_frequency_smoothing = False   # Apply a postprocessing smoothing filter over the FFT outputs
 
         if self.apply_frequency_smoothing:
             self.filter_width = round_up_to_even(0.03*self.n_frequency_bins) - 1
         if self.visualize:
             from src.visualizer import Spectrum_Visualizer
 
-        self.FFT_window_size = round_up_to_even(self.rate * FFT_window_size_ms / 1000)
+        self.FFT_window_size = round_up_to_even(self.rate * FFT_window_size_ms / 1000) 
         self.FFT_window_size_ms = 1000 * self.FFT_window_size / self.rate
         self.fft  = np.ones(int(self.FFT_window_size/2), dtype=float)
         self.fftx = np.arange(int(self.FFT_window_size/2), dtype=float) * self.rate / self.FFT_window_size
 
         self.data_windows_to_buffer = math.ceil(self.FFT_window_size / self.stream_reader.update_window_n_frames)
         self.data_windows_to_buffer = max(1,self.data_windows_to_buffer)
+
+        print(self.data_windows_to_buffer, self.stream_reader.update_window_n_frames)
 
         # Temporal smoothing:
         # Currently the buffer acts on the FFT_features (which are computed only occasionally eg 30 fps)

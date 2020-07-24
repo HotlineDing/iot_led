@@ -18,4 +18,4 @@ class Audio_Features:
     def update(self):
         if np.min(self.ear.bin_mean_values) > 0: #not sure why this is needed
             self.bin_energies = AVERAGE HEIGHT * self.ear.bin_energies / self.ear.bin_mean_values
-        
+

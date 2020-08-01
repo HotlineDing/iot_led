@@ -13,11 +13,13 @@ ear = Stream_Analyzer(
                 verbose   = 0                # Print running statistics (latency, fps, ...)
                 )
 
-Leds = led.Led(ear.visualizer)
-Array = led.Array(ear.visualizer, 'Array', '192.168.0.150', 7777, 20, 7)
+Leds = led.Led()
+Array = led.Array(ear, 'Array', '192.168.0.150', 7777, 7, 20)
 Leds.add_device(Array)
 #Cloud = led.Cloud(ear.visualizer, 'Cloud', '192.168.0.150', 7777, [[140, 1]])
 #Leds.add_device(Cloud)
+Array2 = led.Array(ear, 'Array', '192.168.0.151', 7777, 10 , 15)
+Leds.add_device(Array2)
 
 
 fps = 120  #How often to update the FFT features + display

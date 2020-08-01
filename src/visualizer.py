@@ -194,6 +194,10 @@ class Spectrum_Visualizer:
         bars, slow_bars, new_slow_features = [], [], []
         local_height = self.y_ext[1] - self.y_ext[0]
         feature_values = self.frequency_bin_energies[::-1]
+        #print(np.round(feature_values * 100, 2))
+        
+        #print(np.round(feature_values[:5] * 100, 2))
+
 
         for i in range(len(self.frequency_bin_energies)):
             feature_value = feature_values[i] * local_height

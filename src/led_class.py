@@ -10,8 +10,7 @@ class Led:
     '''
 
 
-    def __init__(self, ear):
-        self.ear = ear
+    def __init__(self):
         self.devices = []
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -46,11 +45,56 @@ class Array(Device):
         self.colors = [list((255*np.array(self.cm(i))[:3]).astype(int)) for i in np.linspace(0,255,self.bins*self.height).astype(int)]
         self.colors = self.colors[::-1]
         self.colors = self.colors[10:] + self.colors[:10]
+        self.time_clk = 0
+        self.beat = 0
+        self.max = 0
+        self.energies = [0]
+        self.counter = 0
+
 
     def generate_pixels(self):
-        pixels = [round((item[3]/500)*(self.height))-1 for item in self.ear.fast_bars]
-        pixels = pixels[::-1]
-        pixels = pixels[::2]
+        if self.time_clk == 50:
+            self.time_clk -= 50
+            self.colors = self.colors[1:] + self.colors[:1]
+        else:
+            self.time_clk += 1
+
+
+        if np.min(self.ear.bin_mean_values) > 0:
+            self.energies = 0.225 * self.ear.frequency_bin_energies / self.ear.bin_mean_values
+            #self.energies = self.energies[::-1]
+       
+        '''
+        #print(np.round(self.energies[1] * 100, 2), end='')
+        #print(' ', end='')
+        #max1 = max(self.energies)
+        max1 = max(self.energies[:2])
+        if max1 > self.max:
+            self.max = max1
+
+
+        if self.energies[0] > 0.34:
+            if self.beat == 0:
+                self.beat = 1
+                print(self.counter, np.round(self.energies[:10], 2))
+                self.counter += 1
+        else:
+            if self.energies[0] < .1:
+                self.beat = 0
+
+        rgb_leds = []
+        for i in range(self.bins * self.height):
+            if self.beat == 1:
+                rgb_leds.append(self.colors[i][0])
+                rgb_leds.append(self.colors[i][1])
+                rgb_leds.append(self.colors[i][2])
+            else:
+                rgb_leds += [0, 0, 0] 
+        '''
+
+        pixels = [round(item*(self.height)) for item in self.energies]
+        pixels = pixels[::1]
+        #print(pixels[:5])
         #pixels = [max(pixels[i:i+3]) for i in range(0, len(pixels), 3)]
         rgb_leds = []
         for x in range(self.bins):
@@ -64,9 +108,6 @@ class Array(Device):
                     rgb_leds.append(self.colors[n][2])
                 else:
                     rgb_leds += [0,0,0]
-
-        #rgb_leds = rgb_leds[::-1]
-        #rgb_leds = 
 
 
         rgb_leds = bytes(rgb_leds)
@@ -127,5 +168,4 @@ class Cloud(Device):
         return ret
         
 
-        
 

@@ -41,15 +41,26 @@ class Array(Device):
         self.bins = bins
         self.height = height
         self.cm = cm.hsv
+        self.cm2 = cm.cool
         #PuBu
-        self.colors = [list((255*np.array(self.cm(i))[:3]).astype(int)) for i in np.linspace(0,255,self.bins*self.height).astype(int)]
+        self.total_leds = self.height * self.bins
+        self.colors = [list((255*np.array(self.cm(i))[:3]).astype(int)) for i in np.linspace(0,255,self.total_leds).astype(int)]
         self.colors = self.colors[::-1]
+        self.beat_colors = [list((255*np.array(self.cm2(i))[:3]).astype(int)) for i in np.linspace(0,255,self.total_leds).astype(int)]
+        self.beat_colors = self.beat_colors[::-1]
+        self.beat_colors = [[255,0,0]] * self.total_leds
+        self.beat_colors2 = [list((255*np.array(self.cm(i))[:3]).astype(int)) for i in np.linspace(0,255,10).astype(int)]
         self.colors = self.colors[10:] + self.colors[:10]
         self.time_clk = 0
+
+        self.beat_detect = 0 
         self.beat = 0
+        self.beat_len = 0
+        self.beat_counter = 0
         self.max = 0
-        self.energies = [0]
+        self.energies = [0] * self.total_leds
         self.counter = 0
+        self.past_energies = [0] * 20
 
 
     def generate_pixels(self):
@@ -62,52 +73,54 @@ class Array(Device):
 
         if np.min(self.ear.bin_mean_values) > 0:
             self.energies = 0.225 * self.ear.frequency_bin_energies / self.ear.bin_mean_values
-            #self.energies = self.energies[::-1]
+        
+        curr = np.round(self.energies[0] * 100, 2)
+        self.past_energies = [curr] + self.past_energies[:-1]
        
-        '''
-        #print(np.round(self.energies[1] * 100, 2), end='')
-        #print(' ', end='')
-        #max1 = max(self.energies)
-        max1 = max(self.energies[:2])
-        if max1 > self.max:
-            self.max = max1
+       
 
+        total_diff = 0
+        for i in range(5):
+            total_diff += self.past_energies[i] - self.past_energies[i+1]
 
-        if self.energies[0] > 0.34:
-            if self.beat == 0:
+        if self.beat == 0:
+            if total_diff > 30:
                 self.beat = 1
-                print(self.counter, np.round(self.energies[:10], 2))
-                self.counter += 1
         else:
-            if self.energies[0] < .1:
+            self.beat_len += 1
+            if self.beat_len > 15 or total_diff < -20:
                 self.beat = 0
-
-        rgb_leds = []
-        for i in range(self.bins * self.height):
-            if self.beat == 1:
-                rgb_leds.append(self.colors[i][0])
-                rgb_leds.append(self.colors[i][1])
-                rgb_leds.append(self.colors[i][2])
-            else:
-                rgb_leds += [0, 0, 0] 
-        '''
+                self.beat_len = 0
 
         pixels = [round(item*(self.height)) for item in self.energies]
         pixels = pixels[::1]
         #print(pixels[:5])
         #pixels = [max(pixels[i:i+3]) for i in range(0, len(pixels), 3)]
         rgb_leds = []
+       
+
+        if self.beat and self.beat_detect:
+            colors = self.beat_colors
+            if self.beat_counter == 10:
+                self.beat_counter = 0
+            rgb_leds = self.beat_colors[self.beat_counter] * self.total_leds
+            self.beat_counter += 1
+            return bytes(rgb_leds)
+        else:
+            colors = self.colors
+
         for x in range(self.bins):
             for y in range(self.height):
                 n = x*self.height + y
                 if x%2==1:
                     y = self.height - 1 - y
                 if(y<pixels[x]):
-                    rgb_leds.append(self.colors[n][0])
-                    rgb_leds.append(self.colors[n][1])
-                    rgb_leds.append(self.colors[n][2])
+                    rgb_leds.append(colors[n][0])
+                    rgb_leds.append(colors[n][1])
+                    rgb_leds.append(colors[n][2])
                 else:
                     rgb_leds += [0,0,0]
+
 
 
         rgb_leds = bytes(rgb_leds)
@@ -167,5 +180,55 @@ class Cloud(Device):
         ret = bytes(self.rgb_leds)
         return ret
         
+
+class Beat(Device):
+    def __init__(self, ear, device_type, ip, port, num_leds):
+        super().__init__(ear, device_type, ip, port)
+        from matplotlib import cm
+        import numpy as np
+        self.cm = cm.cool
+        self.num_leds = num_leds
+        self.colors = [list((255*np.array(self.cm(i))[:3]).astype(int)) for i in np.linspace(0,255,self.num_leds).astype(int)]
+        self.colors = self.colors[::-1] 
+        self.energies = []
+        self.samples = 20
+        self.past_energy = [0] * self.samples
+        self.beat = 0
+        self.beat_len = 0
+
+    def generate_pixels(self):
+        self.energies = 0.225 * self.ear.frequency_bin_energies / self.ear.bin_mean_values
+        self.energies = np.round(self.energies * 100, 2)
+        
+
+        curr = self.energies[0]
+        self.past_energy = [curr] + self.past_energy[:-1]
+
+
+        total_diff = 0
+        for i in range(5):
+            total_diff += self.past_energy[i] - self.past_energy[i+1]
+
+        if self.beat == 0:
+            if total_diff > 30:
+                self.beat = 1
+        else:
+            self.beat_len += 1
+            if self.beat_len > 15 or total_diff < -20:
+                self.beat = 0
+                self.beat_len = 0
+
+        rgb_leds = []
+        if self.beat == 1:
+            for i in range(self.num_leds):
+                rgb_leds.append(self.colors[i][0])
+                rgb_leds.append(self.colors[i][1])
+                rgb_leds.append(self.colors[i][2])
+        else:
+            rgb_leds = [0,0,0] * self.num_leds
+            
+
+        
+        return bytes(rgb_leds)
 
 
